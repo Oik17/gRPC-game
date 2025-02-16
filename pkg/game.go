@@ -21,27 +21,37 @@ type Pool struct {
 	Connection []*Connection
 }
 
-func (p *Pool) CreateStream(pconn *proto.Connect, stream proto.GameService_CreateStreamServer) error {
-	if pconn == nil || pconn.User == nil {
-		fmt.Println("Error: Received nil pconn or pconn.User")
-		return fmt.Errorf("invalid connection request: user information is missing")
+func (p *Pool) CreateStream(req *proto.Connect, stream proto.GameService_CreateStreamServer) error {
+	if req == nil || req.User == nil {
+		return fmt.Errorf("invalid connection request: user data missing")
 	}
 
 	conn := &Connection{
 		stream: stream,
-		id:     pconn.User.Id,
+		id:     req.User.Id,
 		active: true,
 		error:  make(chan error),
 	}
 
-	if p.Connection == nil {
-		p.Connection = []*Connection{}
-	}
 	p.Connection = append(p.Connection, conn)
 
-	fmt.Printf("User %v connected successfully\n", conn.id)
+	fmt.Printf("User %v connected and listening for responses.\n", req.User.Id)
 
+	<-stream.Context().Done()
+
+	p.removeConnection(conn)
+
+	fmt.Printf("User %v disconnected.\n", req.User.Id)
 	return nil
+}
+
+func (p *Pool) removeConnection(conn *Connection) {
+	for i, c := range p.Connection {
+		if c.id == conn.id {
+			p.Connection = append(p.Connection[:i], p.Connection[i+1:]...)
+			break
+		}
+	}
 }
 
 func (s *Pool) SubmitAnswer(ctx context.Context, response *proto.Response) (*proto.Close, error) {
@@ -50,7 +60,7 @@ func (s *Pool) SubmitAnswer(ctx context.Context, response *proto.Response) (*pro
 
 	for _, conn := range s.Connection {
 		wait.Add(1)
-
+		 	
 		go func(conn *Connection, response *proto.Response) {
 
 			defer wait.Done()
