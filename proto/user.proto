@@ -1,41 +1,41 @@
-    syntax="proto3";
+syntax="proto3";
 
-    package game;
+package game;
 
-    option go_package = "/gen";
+option go_package = "/gen";
 
-    import "google/protobuf/timestamp.proto";
+import "google/protobuf/timestamp.proto";
 
-    message User{
-        string id=1;
-        string name=2;
-        int32 points=3;
-    }
+message User{
+    string id=1;
+    string name=2;
+    int32 points=3;
+}
 
-    message Quiz{
-        string id=1;
-        string question=2;
-        string answer=3;
-    }
+message Quiz{
+    string id=1;
+    string question=2;
+    string answer=3;
+}
 
-    message Response{
-        User user=1;
-        string answer=2;
-        bool is_correct=3;
-    }
+message Response{
+    User user=1;
+    string answer=2;
+    bool is_correct=3;
+}
 
-    message Connect{
-        User user=1;
-        bool active=2;
-    }
+message Connect{
+    User user=1;
+    bool active=2;
+}
 
-    message Close{}
+message Close{}
 
-    service gameService{
-        rpc CreateStream(Connect) returns (stream Quiz);
-        rpc SubmitAnswer(Response) returns (Close);
-        rpc StreamLeaderboard(Close) returns (stream User);
-        rpc StartGame(Close) returns (Close);
-        rpc EndGame(Close) returns (Close);
-    }
+service gameService{
+    rpc CreateStream(Connect) returns (stream Quiz);
+    rpc SubmitAnswer(Response) returns (Close);
+    rpc StreamLeaderboard(Close) returns (stream User);
+    rpc StartGame(Close) returns (Close);
+    rpc EndGame(Close) returns (Close);
+}
 
