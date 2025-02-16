@@ -32,7 +32,7 @@ message Connect{
 message Close{}
 
 service gameService{
-    rpc CreateStream(Connect) returns (stream Quiz);
+    rpc CreateStream(Connect) returns (stream Response);
     rpc SubmitAnswer(Response) returns (Close);
     rpc StreamLeaderboard(Close) returns (stream User);
     rpc StartGame(Close) returns (Close);

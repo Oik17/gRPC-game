@@ -30,7 +30,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GameServiceClient interface {
-	CreateStream(ctx context.Context, in *Connect, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Quiz], error)
+	CreateStream(ctx context.Context, in *Connect, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Response], error)
 	SubmitAnswer(ctx context.Context, in *Response, opts ...grpc.CallOption) (*Close, error)
 	StreamLeaderboard(ctx context.Context, in *Close, opts ...grpc.CallOption) (grpc.ServerStreamingClient[User], error)
 	StartGame(ctx context.Context, in *Close, opts ...grpc.CallOption) (*Close, error)
@@ -45,13 +45,13 @@ func NewGameServiceClient(cc grpc.ClientConnInterface) GameServiceClient {
 	return &gameServiceClient{cc}
 }
 
-func (c *gameServiceClient) CreateStream(ctx context.Context, in *Connect, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Quiz], error) {
+func (c *gameServiceClient) CreateStream(ctx context.Context, in *Connect, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Response], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &GameService_ServiceDesc.Streams[0], GameService_CreateStream_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[Connect, Quiz]{ClientStream: stream}
+	x := &grpc.GenericClientStream[Connect, Response]{ClientStream: stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *gameServiceClient) CreateStream(ctx context.Context, in *Connect, opts 
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type GameService_CreateStreamClient = grpc.ServerStreamingClient[Quiz]
+type GameService_CreateStreamClient = grpc.ServerStreamingClient[Response]
 
 func (c *gameServiceClient) SubmitAnswer(ctx context.Context, in *Response, opts ...grpc.CallOption) (*Close, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -117,7 +117,7 @@ func (c *gameServiceClient) EndGame(ctx context.Context, in *Close, opts ...grpc
 // All implementations must embed UnimplementedGameServiceServer
 // for forward compatibility.
 type GameServiceServer interface {
-	CreateStream(*Connect, grpc.ServerStreamingServer[Quiz]) error
+	CreateStream(*Connect, grpc.ServerStreamingServer[Response]) error
 	SubmitAnswer(context.Context, *Response) (*Close, error)
 	StreamLeaderboard(*Close, grpc.ServerStreamingServer[User]) error
 	StartGame(context.Context, *Close) (*Close, error)
@@ -132,7 +132,7 @@ type GameServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedGameServiceServer struct{}
 
-func (UnimplementedGameServiceServer) CreateStream(*Connect, grpc.ServerStreamingServer[Quiz]) error {
+func (UnimplementedGameServiceServer) CreateStream(*Connect, grpc.ServerStreamingServer[Response]) error {
 	return status.Errorf(codes.Unimplemented, "method CreateStream not implemented")
 }
 func (UnimplementedGameServiceServer) SubmitAnswer(context.Context, *Response) (*Close, error) {
@@ -173,11 +173,11 @@ func _GameService_CreateStream_Handler(srv interface{}, stream grpc.ServerStream
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(GameServiceServer).CreateStream(m, &grpc.GenericServerStream[Connect, Quiz]{ServerStream: stream})
+	return srv.(GameServiceServer).CreateStream(m, &grpc.GenericServerStream[Connect, Response]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type GameService_CreateStreamServer = grpc.ServerStreamingServer[Quiz]
+type GameService_CreateStreamServer = grpc.ServerStreamingServer[Response]
 
 func _GameService_SubmitAnswer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Response)

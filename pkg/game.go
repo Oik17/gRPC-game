@@ -44,14 +44,15 @@ func (p *Pool) CreateStream(pconn *proto.Connect, stream proto.GameService_Creat
 	return nil
 }
 
-func (s *Pool) QuizResponse(ctx context.Context, response *proto.Quiz) (*proto.Close, error) {
+func (s *Pool) SubmitAnswer(ctx context.Context, response *proto.Response) (*proto.Close, error) {
 	wait := sync.WaitGroup{}
 	done := make(chan struct{})
 
 	for _, conn := range s.Connection {
 		wait.Add(1)
 
-		go func(conn *Connection, response *proto.Quiz) {
+		go func(conn *Connection, response *proto.Response) {
+
 			defer wait.Done()
 
 			if conn == nil {
@@ -59,6 +60,8 @@ func (s *Pool) QuizResponse(ctx context.Context, response *proto.Quiz) (*proto.C
 				return
 			}
 			if conn.active {
+				fmt.Printf("User %s answered: %s | Correct: %v\n", response.User.Id, response.Answer, response.IsCorrect)
+
 				err := conn.stream.Send(response)
 				if err != nil {
 					fmt.Printf("Error with Stream: %v - Error: %v\n", conn.stream, err)
