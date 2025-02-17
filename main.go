@@ -8,12 +8,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/Oik17/gRPC-game/config"
 	database "github.com/Oik17/gRPC-game/db/init"
-	db "github.com/Oik17/gRPC-game/db/sqlc"
 	proto "github.com/Oik17/gRPC-game/gen"
 	"github.com/Oik17/gRPC-game/pkg"
-	"github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
@@ -22,16 +19,11 @@ func main() {
 		log.Fatalf("Failed to listen on port 8080: %v", err)
 	}
 
-	dsn := config.Config("DSN")
-	pool, err := database.InitDB(context.Background(), dsn)
+	queries, err := database.InitDB(context.Background())
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
 	}
-	defer pool.Close()
-
-	sqlDB := stdlib.OpenDBFromPool(pool)
-
-	queries := db.New(sqlDB)
+	
 	_ = queries
 
 	grpcServer := grpc.NewServer()
