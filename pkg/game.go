@@ -71,7 +71,7 @@ func (s *Pool) SubmitAnswer(ctx context.Context, response *proto.Response) (*pro
 			}
 			if conn.active {
 				fmt.Printf("User %s answered: %s | Correct: %v\n", response.User.Id, response.Answer, response.IsCorrect)
-
+				
 				err := conn.stream.Send(response)
 				if err != nil {
 					fmt.Printf("Error with Stream: %v - Error: %v\n", conn.stream, err)
@@ -90,6 +90,7 @@ func (s *Pool) SubmitAnswer(ctx context.Context, response *proto.Response) (*pro
 		wait.Wait()
 		close(done)
 	}()
+
 
 	<-done
 	return &proto.Close{}, nil
