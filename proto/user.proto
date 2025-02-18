@@ -30,6 +30,10 @@ message Connect{
     bool active=2;
 }
 
+message Leaderboard{
+    User user=1;
+}
+
 message Close{}
 
 service gameService{
