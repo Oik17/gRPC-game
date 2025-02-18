@@ -130,6 +130,18 @@ func (q *Queries) GetAllQuizzes(ctx context.Context) ([]Quiz, error) {
 	return items, nil
 }
 
+const getAnswer = `-- name: GetAnswer :one
+SELECT answer FROM questions 
+WHERE question = $1
+`
+
+func (q *Queries) GetAnswer(ctx context.Context, question string) (sql.NullString, error) {
+	row := q.db.QueryRowContext(ctx, getAnswer, question)
+	var answer sql.NullString
+	err := row.Scan(&answer)
+	return answer, err
+}
+
 const getQuestionById = `-- name: GetQuestionById :one
 SELECT id, question, answer FROM questions 
 WHERE id = $1
@@ -169,7 +181,6 @@ type GetQuizWithQuestionsRow struct {
 	Answer     sql.NullString
 }
 
-// Get a Quiz with Full Question Details
 func (q *Queries) GetQuizWithQuestions(ctx context.Context, id int64) ([]GetQuizWithQuestionsRow, error) {
 	rows, err := q.db.QueryContext(ctx, getQuizWithQuestions, id)
 	if err != nil {

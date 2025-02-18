@@ -60,9 +60,12 @@ WHERE id = $1;
 SELECT * FROM quiz 
 ORDER BY id;
 
--- Get a Quiz with Full Question Details
 -- name: GetQuizWithQuestions :many
 SELECT q.id AS quiz_id, q.title, qs.id AS question_id, qs.question, qs.answer
 FROM quiz q
 JOIN questions qs ON qs.id = ANY(q.question_ids)
 WHERE q.id = $1;
+
+-- name: GetAnswer :one
+SELECT answer FROM questions 
+WHERE question = $1;

@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
 
 	"google.golang.org/grpc"
 
-	database "github.com/Oik17/gRPC-game/db/init"
 	proto "github.com/Oik17/gRPC-game/gen"
 	"github.com/Oik17/gRPC-game/pkg"
 )
@@ -19,12 +17,12 @@ func main() {
 		log.Fatalf("Failed to listen on port 8080: %v", err)
 	}
 
-	queries, err := database.InitDB(context.Background())
-	if err != nil {
-		log.Fatalf("Database connection failed: %v", err)
-	}
-	
-	_ = queries
+	// queries, err := database.InitDB(context.Background())
+	// if err != nil {
+	// 	log.Fatalf("Database connection failed: %v", err)
+	// }
+
+	// _ = queries
 
 	grpcServer := grpc.NewServer()
 	poolService := &pkg.Pool{}

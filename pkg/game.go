@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	proto "github.com/Oik17/gRPC-game/gen"
+
+	database "github.com/Oik17/gRPC-game/db/init"
 )
 
 type Connection struct {
@@ -55,12 +57,18 @@ func (p *Pool) removeConnection(conn *Connection) {
 }
 
 func (s *Pool) SubmitAnswer(ctx context.Context, response *proto.Response) (*proto.Close, error) {
+
+	queries, err := database.InitDB(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize database: %w", err)
+	}
+
 	wait := sync.WaitGroup{}
 	done := make(chan struct{})
 
 	for _, conn := range s.Connection {
 		wait.Add(1)
-		 	
+
 		go func(conn *Connection, response *proto.Response) {
 
 			defer wait.Done()
@@ -71,9 +79,27 @@ func (s *Pool) SubmitAnswer(ctx context.Context, response *proto.Response) (*pro
 			}
 			if conn.active {
 				fmt.Printf("User %s answered: %s | Correct: %v\n", response.User.Id, response.Answer, response.IsCorrect)
-				
-				err := conn.stream.Send(response)
+				answer, err := queries.GetAnswer(ctx, response.Question)
 				if err != nil {
+					fmt.Printf("Error fetching answer: %v\n", err)
+					conn.active = false
+					select {
+					case conn.error <- err:
+					default:
+						fmt.Println("Error channel full, dropping error")
+					}
+					return
+				}
+
+				correctAnswer := answer.String
+				isCorrect := response.Answer == correctAnswer
+
+				fmt.Printf("User %s answered: %s | Correct Answer: %s | Correct: %v\n",
+					response.User.Id, response.Answer, correctAnswer, isCorrect)
+
+				response.IsCorrect = isCorrect
+
+				if err := conn.stream.Send(response); err != nil {
 					fmt.Printf("Error with Stream: %v - Error: %v\n", conn.stream, err)
 					conn.active = false
 					select {
@@ -90,7 +116,6 @@ func (s *Pool) SubmitAnswer(ctx context.Context, response *proto.Response) (*pro
 		wait.Wait()
 		close(done)
 	}()
-
 
 	<-done
 	return &proto.Close{}, nil
